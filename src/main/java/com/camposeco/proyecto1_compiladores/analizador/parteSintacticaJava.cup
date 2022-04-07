@@ -1,0 +1,416 @@
+// seccion codigo
+package com.camposeco.proyecto1_compiladores.analizador.parser;
+import java.util.*;
+import java.io.*;
+import java.lang.*;
+import java_cup.runtime.*;
+import com.camposeco.proyecto1_compiladores.analizador.lexer.parteLexicaJava;
+import java.util.ArrayList;
+import com.camposeco.proyecto1_compiladores.objetos.*;
+parser code {:
+    
+    public SintacticoParserJava(parteLexicaJava lexico) {
+        super(lexico);
+    }
+    //1
+
+    //2
+    private ArrayList<Metodos> metodos=new ArrayList<Metodos>();
+    private ArrayList<Parametros> parametros=new ArrayList<>();
+    private ArrayList<Variables> variables=new ArrayList<>();
+    private ArrayList<Variables> variablesClases=new ArrayList<>();
+    private ArrayList<Clases> clases=new ArrayList<>();
+    public ArrayList<Metodos> getMetodos(){
+        return metodos;
+    }
+    public ArrayList<Variables> getVariables(){
+        return variables;
+    }
+    public ArrayList<Clases> getClases(){
+        return clases;
+    }
+     private ArrayList<String> errorSintactico=new ArrayList<>();
+    public ArrayList<String> getErrorSintactico(){
+        return errorSintactico;
+    }
+    public void report_error(String message, Object info) {
+        System.out.println("public void report_error");
+    }
+    
+    public void report_fatal_error(String message, Object info) {
+        System.out.println("public void report_fatal_error");
+    }
+
+    public void syntax_error(Symbol cur_token) {
+        errorSintactico.add((cur_token.value)+(cur_token.left)+(cur_token.right)+"Sintactico"+"Se esperaba 'una clase bien hecha de java'");
+
+    }
+
+    public void unrecovered_syntax_error(Symbol cur_token) {
+        if (cur_token.sym == sym.EOF) {
+            System.out.println("public void unrecoveredsyntax_error");
+        }
+    }
+:}
+
+// seccion de terminales
+terminal IGUAL, COMA, PUNTO, DOS_PUNTOS, PUNTO_COMA, RESTO, MAS, MENOS, ASTERISCO, DIAGONAL, LLAVE_A, LLAVE_C, 
+PARENTESIS_A, PARENTESIS_C, CORCHETE_A, CORCHETE_C, MENOR_QUE, MAYOR_QUE, IGUAL_A, DISTINTO_A, MENOR_IGUAL, MAYOR_IGUAL, INCREMENTO, 
+DECREMENTO, AND, OR, NOT, IMPORTAR,  OBJETO, IF, ELSE, FOR, WHILE, DO, SWITCH, PRIVATE, 
+PUBLIC, PROTECTED, FINAL, BREAK, RETURN,COMENTARIO_LINEA,COMENTARIO_MULTILINEA,FALSE,TRUE,CLASE,VOID,CASE,DEFAULT,THIS,NEW;
+
+terminal String TEXTO,PALABRA,COMILLAS_TEXTO,COMILLA_LETRA,ENTERO,BOOLEANO, CADENA, CARACTER, DOUBLE;
+terminal Integer DIGITOS;
+
+// seccion de no termimales
+non terminal String s,crear_variables,variable_entero,variable_booleano,variable_cadena,variable_caracter,variable_decimal,variable_objeto,multiple_entero,
+            visibilidad,multiple_booleano,seleccion_booleano,multiple_cadena,multiple_caracter,multiple_decimal,asignar_variables,
+            asignar_entero,asignar_booleano,asignar_cadena,asignar_caracter,asignar_decimal,asignar_objeto,seleccion_variables,repetir_variables,
+            condicional_if,realizar_if,realizar_else,operadores_condicional,variables_comparadores,selector_var_d,selector_var_b,booleano_comparadores,
+            importando,repetir_importar,operaciones_aritmeticas_entero,operaciones_aritmeticas_decimal,definir_clase,
+            para_decimal,seleccion_inicios,elegir_operacion,definir_void,definir_metodo_variable,contenedor_void,contenedor_clase,seleccionar_parametros,tipo_variable,
+            tipo_variable_metodo,selector_boleano_texto,eleccion_simbolos_mayor_menor,eleccion_incremento_decremento,ciclo_for,ciclo_while,condicional_switch,
+            ciclo_do_while,casos_switch,creacion_ciclos,metodo_variables,
+            contenedor_constructor,definir_constructor,contenedor_internos,multiple_objeto;
+precedence left MAS,MENOS;
+precedence left ASTERISCO,DIAGONAL,RESTO;
+s   ::= importando                  {: :}
+    |   importando s                             {: :}
+    |   seleccion_inicios                  {: :}
+    |   error s                             {: System.out.println("error "); :}
+    ;
+seleccion_inicios   ::= definir_clase                                       {: :}
+    |   definir_clase seleccion_inicios                {: :}
+    ;
+contenedor_clase::= seleccion_variables                  {: :}
+    |   seleccion_variables contenedor_clase                             {: :}
+    |   condicional_if                                 {: :}
+    |   condicional_if contenedor_clase                {: :}
+    |   definir_void                                    {:  :}
+    |   definir_void contenedor_clase                                  {: :}
+    |   definir_constructor         {: :}
+    |   definir_constructor contenedor_clase         {: :}
+    |   definir_metodo_variable                                   {: :}
+    |   definir_metodo_variable contenedor_clase                  {: :}
+    |   creacion_ciclos                                     {: :}
+    |   creacion_ciclos contenedor_clase                  {:  :}
+    ;
+contenedor_void::= metodo_variables                  {:  :}
+    |   metodo_variables contenedor_void            {: :}
+    |   condicional_if                                 {:  :}
+    |   condicional_if contenedor_void                 {:  :}
+    |   creacion_ciclos                                {:  :}
+    |   creacion_ciclos contenedor_void                {:  :}
+    ;
+//visibilidad
+visibilidad::= PUBLIC                     {: :}
+    |   PRIVATE                             {:  :}
+    |   PROTECTED                              {:  :}
+    |   FINAL                              {:  :}
+    ;
+/*Clase*/
+definir_clase::= visibilidad CLASE PALABRA:palabra LLAVE_A contenedor_clase LLAVE_C       {: clases.add(new Clases(palabra,metodos,variablesClases)); variablesClases= new ArrayList<>(); metodos= new ArrayList<>(); :}
+    |   CLASE PALABRA:palabra LLAVE_A contenedor_clase LLAVE_C       {: clases.add(new Clases(palabra,metodos,variablesClases)); variablesClases= new ArrayList<>(); metodos= new ArrayList<>(); :}
+    ;  
+contenedor_constructor::= THIS PUNTO PALABRA IGUAL PALABRA PUNTO_COMA                 {:  :}
+    |   THIS PUNTO PALABRA IGUAL PALABRA PUNTO_COMA contenedor_constructor           {: :}
+    ;
+/*void*/
+definir_constructor::= visibilidad PALABRA:nombreVoid PARENTESIS_A seleccionar_parametros PARENTESIS_C LLAVE_A contenedor_constructor LLAVE_C              {: metodos.add(new Metodos(nombreVoid,"constructor",parametros,variables));parametros= new ArrayList<>();variables= new ArrayList<>();  :}
+    |   visibilidad PALABRA:nombreVoid PARENTESIS_A seleccionar_parametros PARENTESIS_C LLAVE_A LLAVE_C              {: metodos.add(new Metodos(nombreVoid,"constructor",parametros,variables));parametros= new ArrayList<>();variables= new ArrayList<>();  :}
+    |   PALABRA:nombreVoid PARENTESIS_A seleccionar_parametros PARENTESIS_C LLAVE_A LLAVE_C       {: metodos.add(new Metodos(nombreVoid,"constructor",parametros,variables));parametros= new ArrayList<>();variables= new ArrayList<>();  :}
+    |   PALABRA:nombreVoid PARENTESIS_A seleccionar_parametros PARENTESIS_C LLAVE_A contenedor_constructor LLAVE_C       {:metodos.add(new Metodos(nombreVoid,"constructor",parametros,variables));parametros= new ArrayList<>(); variables= new ArrayList<>();  :}
+    ;
+
+definir_void::= visibilidad VOID PALABRA:nombreVoid PARENTESIS_A seleccionar_parametros PARENTESIS_C LLAVE_A contenedor_void LLAVE_C              {: metodos.add(new Metodos(nombreVoid,"void",parametros,variables));parametros= new ArrayList<>();variables= new ArrayList<>();  :}
+    |   visibilidad VOID PALABRA:nombreVoid PARENTESIS_A seleccionar_parametros PARENTESIS_C LLAVE_A LLAVE_C              {: metodos.add(new Metodos(nombreVoid,"void",parametros,variables));parametros= new ArrayList<>();variables= new ArrayList<>();  :}
+    |   VOID PALABRA:nombreVoid PARENTESIS_A seleccionar_parametros PARENTESIS_C LLAVE_A LLAVE_C       {: metodos.add(new Metodos(nombreVoid,"void",parametros,variables));parametros= new ArrayList<>();variables= new ArrayList<>();  :}
+    |   VOID PALABRA:nombreVoid PARENTESIS_A seleccionar_parametros PARENTESIS_C LLAVE_A contenedor_void LLAVE_C       {:metodos.add(new Metodos(nombreVoid,"void",parametros,variables));parametros= new ArrayList<>(); variables= new ArrayList<>();  :}
+    |   visibilidad VOID PALABRA:nombreVoid PARENTESIS_A PARENTESIS_C LLAVE_A contenedor_void LLAVE_C       {: metodos.add(new Metodos(nombreVoid,"void",parametros,variables));parametros= new ArrayList<>(); variables= new ArrayList<>();  :}
+    |   VOID PALABRA:nombreVoid PARENTESIS_A PARENTESIS_C LLAVE_A contenedor_void LLAVE_C       {: metodos.add(new Metodos(nombreVoid,"void",parametros,variables));parametros= new ArrayList<>(); variables= new ArrayList<>();  :}
+    ;
+seleccionar_parametros::= tipo_variable:tipoVariable PALABRA:nombreVariable             {:parametros.add(new Parametros(tipoVariable,nombreVariable));:}
+    |   tipo_variable:tipoVariable PALABRA:nombreVariable  COMA seleccionar_parametros   {:parametros.add(new Parametros(tipoVariable,nombreVariable)); :}
+    ;
+/*tipo variable*/
+
+definir_metodo_variable::= visibilidad tipo_variable_metodo:tipoNombreVar seleccionar_parametros PARENTESIS_C LLAVE_A contenedor_void RETURN PALABRA PUNTO_COMA LLAVE_C     {: String[] separar = tipoNombreVar.split(","); String tipo= separar[0]; String nombre = separar[1];
+                                                                                                                                  metodos.add(new Metodos(nombre,tipo,parametros,variables));parametros= new ArrayList<>(); variables= new ArrayList<>(); :}
+    |   tipo_variable_metodo:tipoNombreVar seleccionar_parametros PARENTESIS_C LLAVE_A contenedor_void RETURN PALABRA PUNTO_COMA LLAVE_C      {: String[] separar = tipoNombreVar.split(","); String tipo= separar[0]; String nombre = separar[1];;
+                                                                                                                                  metodos.add(new Metodos(nombre,tipo,parametros,variables));parametros= new ArrayList<>(); variables= new ArrayList<>(); :}
+    |   visibilidad tipo_variable_metodo:tipoNombreVar seleccionar_parametros PARENTESIS_C LLAVE_A RETURN PALABRA PUNTO_COMA LLAVE_C          {: String[] separar = tipoNombreVar.split(","); String tipo= separar[0]; String nombre = separar[1];
+                                                                                                                                 metodos.add(new Metodos(nombre,tipo,parametros,variables));parametros= new ArrayList<>(); variables= new ArrayList<>(); :}
+    |   tipo_variable_metodo:tipoNombreVar seleccionar_parametros PARENTESIS_C LLAVE_A RETURN PALABRA PUNTO_COMA LLAVE_C      {: String[] separar = tipoNombreVar.split(","); String tipo= separar[0]; String nombre = separar[1];
+                                                                                                                                  metodos.add(new Metodos(nombre,tipo,parametros,variables));parametros= new ArrayList<>(); variables= new ArrayList<>(); :}
+    |   visibilidad tipo_variable_metodo:tipoNombreVar PARENTESIS_C LLAVE_A contenedor_void RETURN PALABRA PUNTO_COMA LLAVE_C      {: String[] separar = tipoNombreVar.split(","); String tipo= separar[0]; String nombre = separar[1];
+                                                                                                                                  metodos.add(new Metodos(nombre,tipo,parametros,variables));parametros= new ArrayList<>(); variables= new ArrayList<>(); :}
+    |   tipo_variable_metodo:tipoNombreVar PARENTESIS_C LLAVE_A contenedor_void RETURN PALABRA PUNTO_COMA LLAVE_C       {: String[] separar = tipoNombreVar.split(","); String tipo= separar[0]; String nombre = separar[1];
+                                                                                                                                  metodos.add(new Metodos(nombre,tipo,parametros,variables));parametros= new ArrayList<>(); variables= new ArrayList<>(); :}
+    ;
+tipo_variable_metodo::= ENTERO PALABRA:palabra PARENTESIS_A          {:String temp = "int,"+palabra; RESULT = temp; :}
+    |   BOOLEANO PALABRA:palabra PARENTESIS_A   {:String temp = "boolean,"+palabra; RESULT = temp; :}
+    |   CADENA PALABRA:palabra PARENTESIS_A   {:String temp = "String,"+palabra; RESULT = temp; :}
+    |   CARACTER PALABRA:palabra PARENTESIS_A   {:String temp = "char,"+palabra; RESULT = temp; :}
+    |   DOUBLE PALABRA:palabra PARENTESIS_A  {{:String temp = "double,"+palabra; RESULT = temp; :}
+    ;
+tipo_variable::= ENTERO  {:RESULT = "int"; :}
+    |   BOOLEANO  {:RESULT = "boolean"; :}
+    |   CADENA   {:RESULT = "String"; :}
+    |   CARACTER   {:RESULT = "char"; :}
+    |   DOUBLE   {:RESULT = "double"; :}
+    ;
+/*Condicionales*/
+condicional_if::= realizar_if                {: System.out.println("condicional if");  :}
+    |   realizar_if realizar_else            {: System.out.println("condicional if else"); :}
+    |   condicional_switch                  {: System.out.println("condicional switch"); :}
+    ;
+contenedor_internos::= seleccion_variables                {: System.out.println("var");  :}
+    |   seleccion_variables contenedor_internos               {: System.out.println("var");  :}
+    |   condicional_if             {: System.out.println("condicional if else"); :}
+    |   condicional_if contenedor_internos                 {: System.out.println("condicional switch"); :}
+    |   creacion_ciclos {: System.out.println("ciclo"); :}
+    |   creacion_ciclos contenedor_internos                 {: System.out.println("ciclo"); :}
+    ;
+realizar_if::= IF PARENTESIS_A operadores_condicional PARENTESIS_C LLAVE_A contenedor_internos LLAVE_C                {:  :}
+    |IF PARENTESIS_A operadores_condicional PARENTESIS_C LLAVE_A LLAVE_C                {:  :}
+    ;
+realizar_else::= ELSE LLAVE_A contenedor_internos LLAVE_C                {: :}
+    |ELSE LLAVE_A LLAVE_C       {: :}
+    ;
+/*Operadores*/
+operadores_condicional::= variables_comparadores     {:   :}
+    | variables_comparadores OR operadores_condicional     {:   :}
+    | variables_comparadores AND operadores_condicional     {:   :}
+    | booleano_comparadores             {:   :}
+    | booleano_comparadores OR operadores_condicional     {:   :}
+    | booleano_comparadores AND operadores_condicional     {:   :}
+    ;
+variables_comparadores::= selector_var_d MENOR_QUE selector_var_d    {:  :}
+    |   selector_var_d MAYOR_QUE selector_var_d                   {:  :}
+    |   operaciones_aritmeticas_decimal IGUAL_A operaciones_aritmeticas_decimal                   {:  :}
+    |   operaciones_aritmeticas_decimal DISTINTO_A operaciones_aritmeticas_decimal                   {:  :}
+    |   operaciones_aritmeticas_decimal IGUAL_A PALABRA                   {:  :}
+    |   operaciones_aritmeticas_decimal DISTINTO_A PALABRA                   {:  :}
+    |   COMILLAS_TEXTO  IGUAL_A PALABRA                    {:  :}
+    |   COMILLAS_TEXTO  DISTINTO_A PALABRA                   {:  :}
+    |   COMILLA_LETRA  IGUAL_A PALABRA                    {:  :}
+    |   COMILLA_LETRA  DISTINTO_A PALABRA                   {:  :}
+    |   selector_var_d MENOR_IGUAL selector_var_d                   {:  :}
+    |   selector_var_d MAYOR_IGUAL selector_var_d                   {:  :}
+    ;
+selector_var_d::= operaciones_aritmeticas_decimal                 {:  :}
+    |   PALABRA                                                     {:  :}
+    ;
+
+booleano_comparadores::= selector_var_b                {:   :}
+    | selector_var_b IGUAL_A selector_boleano_texto          {:   :}
+    | selector_var_b DISTINTO_A selector_boleano_texto          {:   :}
+    | selector_var_b IGUAL_A NOT seleccion_booleano          {:   :}
+    | selector_var_b DISTINTO_A NOT seleccion_booleano          {:   :}
+    | NOT selector_var_b           {:   :} 
+    | NOT selector_var_b IGUAL_A selector_var_b           {:   :}
+    | NOT selector_var_b DISTINTO_A selector_var_b           {:   :}
+    | NOT selector_var_b IGUAL_A NOT selector_var_b           {:   :}
+    | NOT selector_var_b DISTINTO_A NOT selector_var_b           {:   :}
+    ;
+selector_var_b::= PALABRA                   {:  :}
+    | seleccion_booleano                  {:  :}
+;
+selector_boleano_texto::= COMILLAS_TEXTO                  {:  :}
+    | COMILLA_LETRA                  {:  :}
+    | seleccion_booleano                  {:  :}
+;
+
+/*variables*/
+metodo_variables::= repetir_variables                 {: :}
+    |   asignar_variables                            {: :}
+    ;
+
+seleccion_variables::= repetir_variables                 {:  variablesClases.addAll(variables); variables= new ArrayList<>(); :}
+    |   asignar_variables                            {:  variablesClases.addAll(variables); variables= new ArrayList<>(); :}
+    ;
+//repetir asignacion variables
+
+asignar_variables::= asignar_booleano                              {:  :}
+    |   asignar_cadena                              {:  :}
+    |   asignar_caracter                              {:  :}
+    |   asignar_decimal                              {:  :}
+    |   asignar_objeto                              {:  :}
+    ;
+//booleano
+asignar_booleano  ::= PALABRA IGUAL seleccion_booleano PUNTO_COMA                     {: :}
+    ;
+//cadena
+asignar_cadena  ::= PALABRA IGUAL COMILLAS_TEXTO PUNTO_COMA                     {: :}
+    ;
+//caracter
+asignar_caracter  ::= PALABRA IGUAL COMILLA_LETRA  PUNTO_COMA                     {: :}
+    ;
+//decimal
+asignar_decimal  ::= PALABRA IGUAL operaciones_aritmeticas_decimal PUNTO_COMA                     {: :}
+    ;
+//objeto
+asignar_objeto  ::= PALABRA IGUAL NEW OBJETO PARENTESIS_A PARENTESIS_C  PUNTO_COMA                     {: :}
+    |   PALABRA IGUAL NEW PALABRA PARENTESIS_A seleccionar_parametros PARENTESIS_C  PUNTO_COMA                     {: :}
+    |   PALABRA IGUAL PALABRA PUNTO_COMA                     {: :}
+    ;
+//repetir variables
+repetir_variables::=  visibilidad crear_variables                  {: :}
+    |   crear_variables                             {: :}
+    ;
+
+crear_variables::= variable_entero                     {: :}
+    |   variable_booleano                              {:  :}
+    |   variable_cadena                              {:  :}
+    |   variable_caracter                              {:  :}
+    |   variable_decimal                              {:  :}
+    |   variable_objeto                              {:  :}
+    ;
+//entero
+variable_entero  ::= ENTERO PALABRA:palabra IGUAL operaciones_aritmeticas_decimal PUNTO_COMA         {: variables.add(new Variables(palabra,"int")); :}
+    |   ENTERO PALABRA:palabra PUNTO_COMA                         {: variables.add(new Variables(palabra,"int")); :}
+    |   ENTERO PALABRA:palabra COMA multiple_entero PUNTO_COMA                         {: variables.add(new Variables(palabra,"int")); :}
+    |   ENTERO PALABRA:palabra IGUAL operaciones_aritmeticas_decimal COMA multiple_entero PUNTO_COMA {: variables.add(new Variables(palabra,"int")); :}
+    ;
+multiple_entero  ::= PALABRA:palabra                {: variables.add(new Variables(palabra,"int")); :}
+    |   PALABRA:palabra IGUAL operaciones_aritmeticas_decimal                      {: variables.add(new Variables(palabra,"int")); :}
+    |   PALABRA:palabra COMA multiple_entero                      {: variables.add(new Variables(palabra,"int")); :}
+    |   PALABRA:palabra IGUAL operaciones_aritmeticas_decimal COMA multiple_entero                          {: variables.add(new Variables(palabra,"int")); :}
+    ;
+//booleano
+variable_booleano  ::= BOOLEANO PALABRA:palabra IGUAL seleccion_booleano PUNTO_COMA         {: variables.add(new Variables(palabra,"boolean")); :}
+    |   BOOLEANO PALABRA:palabra PUNTO_COMA                           {: variables.add(new Variables(palabra,"boolean")); :}
+    |   BOOLEANO PALABRA:palabra COMA multiple_booleano PUNTO_COMA                           {: variables.add(new Variables(palabra,"boolean")); :}
+    |   BOOLEANO PALABRA:palabra IGUAL seleccion_booleano COMA multiple_booleano PUNTO_COMA {: variables.add(new Variables(palabra,"boolean")); :}
+    ;
+multiple_booleano  ::= PALABRA:palabra                   {: variables.add(new Variables(palabra,"boolean")); :}
+    |   PALABRA:palabra IGUAL seleccion_booleano        {: variables.add(new Variables(palabra,"boolean")); :}
+    |   PALABRA:palabra COMA multiple_booleano           {: variables.add(new Variables(palabra,"boolean")); :}
+    |   PALABRA:palabra IGUAL seleccion_booleano COMA multiple_booleano        {: variables.add(new Variables(palabra,"boolean")); :}
+    ;
+seleccion_booleano::= TRUE                   {: :}
+    |   FALSE                            {:  :}
+    ;
+//cadena
+variable_cadena  ::= CADENA PALABRA:palabra IGUAL COMILLAS_TEXTO PUNTO_COMA          {: variables.add(new Variables(palabra,"String")); :}
+    |   CADENA PALABRA:palabra PUNTO_COMA                        {: variables.add(new Variables(palabra,"String")); :}
+    |   CADENA PALABRA:palabra COMA multiple_cadena PUNTO_COMA             {: variables.add(new Variables(palabra,"String")); :}
+    |   CADENA PALABRA:palabra IGUAL COMILLAS_TEXTO COMA multiple_cadena PUNTO_COMA {: variables.add(new Variables(palabra,"String")); :}
+    ;
+multiple_cadena  ::= PALABRA:palabra           {: variables.add(new Variables(palabra,"String")); :}
+    |   PALABRA:palabra IGUAL COMILLAS_TEXTO                  {: variables.add(new Variables(palabra,"String")); :}
+    |   PALABRA:palabra COMA multiple_cadena                 {: variables.add(new Variables(palabra,"String")); :}
+    |   PALABRA:palabra IGUAL COMILLAS_TEXTO COMA multiple_cadena      {: variables.add(new Variables(palabra,"String")); :}
+    ;
+//caracter
+variable_caracter  ::= CARACTER PALABRA:palabra IGUAL COMILLA_LETRA  PUNTO_COMA   {: variables.add(new Variables(palabra,"char")); :}
+    |   CARACTER PALABRA:palabra PUNTO_COMA                           {: variables.add(new Variables(palabra,"char")); :}
+    |   CARACTER PALABRA:palabra COMA multiple_caracter PUNTO_COMA                       {: variables.add(new Variables(palabra,"char")); :}
+    |   CARACTER PALABRA:palabra IGUAL COMILLA_LETRA  COMA multiple_caracter PUNTO_COMA {: variables.add(new Variables(palabra,"char")); :}
+    ;
+multiple_caracter  ::= PALABRA:palabra                 {: variables.add(new Variables(palabra,"char")); :}
+    |   PALABRA:palabra IGUAL COMILLA_LETRA            {: variables.add(new Variables(palabra,"char")); :}
+    |   PALABRA:palabra COMA multiple_caracter            {: variables.add(new Variables(palabra,"char")); :}
+    |   PALABRA:palabra IGUAL COMILLA_LETRA  COMA multiple_caracter    {: variables.add(new Variables(palabra,"char")); :}
+    ;
+//decimal
+variable_decimal  ::= DOUBLE PALABRA:palabra IGUAL operaciones_aritmeticas_decimal PUNTO_COMA    {: variables.add(new Variables(palabra,"double")); :}
+    |   DOUBLE PALABRA:palabra PUNTO_COMA                   {: variables.add(new Variables(palabra,"double")); :}
+    |   DOUBLE PALABRA:palabra COMA multiple_decimal PUNTO_COMA             {: variables.add(new Variables(palabra,"double")); :}
+    |   DOUBLE PALABRA:palabra IGUAL operaciones_aritmeticas_decimal COMA multiple_decimal PUNTO_COMA {: variables.add(new Variables(palabra,"double")); :}
+    ;
+multiple_decimal  ::= PALABRA:palabra           {: variables.add(new Variables(palabra,"double")); :}
+    |   PALABRA:palabra IGUAL operaciones_aritmeticas_decimal           {: variables.add(new Variables(palabra,"double")); :}
+    |   PALABRA:palabra IGUAL operaciones_aritmeticas_decimal COMA multiple_decimal       {: variables.add(new Variables(palabra,"double")); :}
+    |   PALABRA:palabra COMA multiple_decimal                     {: variables.add(new Variables(palabra,"double")); :}
+    ;
+//objeto
+variable_objeto  ::= OBJETO PALABRA:palabra IGUAL NEW OBJETO PARENTESIS_A PARENTESIS_C PUNTO_COMA    {: variables.add(new Variables(palabra,"object")); :}
+    |   OBJETO PALABRA:palabra IGUAL NEW PALABRA PARENTESIS_A seleccionar_parametros PARENTESIS_C PUNTO_COMA    {: variables.add(new Variables(palabra,"object")); :}
+    |   OBJETO PALABRA:palabra IGUAL PALABRA PUNTO_COMA                   {: variables.add(new Variables(palabra,"object")); :}
+    |   OBJETO PALABRA:palabra PUNTO_COMA                   {: variables.add(new Variables(palabra,"object")); :}
+    |   OBJETO PALABRA:palabra COMA multiple_objeto PUNTO_COMA             {: variables.add(new Variables(palabra,"object")); :}
+    |   OBJETO PALABRA:palabra IGUAL PALABRA COMA multiple_objeto PUNTO_COMA {: variables.add(new Variables(palabra,"object")); :}
+    |   OBJETO PALABRA:palabra IGUAL NEW OBJETO PARENTESIS_A PARENTESIS_C COMA multiple_objeto PUNTO_COMA {: variables.add(new Variables(palabra,"object")); :}
+    |   OBJETO PALABRA:palabra IGUAL NEW PALABRA PARENTESIS_A seleccionar_parametros PARENTESIS_C COMA multiple_objeto PUNTO_COMA {: variables.add(new Variables(palabra,"object")); :}
+    ;
+multiple_objeto  ::= PALABRA:palabra           {: variables.add(new Variables(palabra,"object")); :}
+    |   PALABRA:palabra IGUAL NEW OBJETO PARENTESIS_A PARENTESIS_C           {: variables.add(new Variables(palabra,"object")); :}
+    |   PALABRA:palabra IGUAL NEW OBJETO PARENTESIS_A PARENTESIS_C COMA multiple_objeto        {: variables.add(new Variables(palabra,"object")); :}
+    |   PALABRA:palabra IGUAL NEW PALABRA PARENTESIS_A seleccionar_parametros PARENTESIS_C           {: variables.add(new Variables(palabra,"object")); :}
+    |   PALABRA:palabra IGUAL NEW PALABRA PARENTESIS_A seleccionar_parametros PARENTESIS_C COMA multiple_objeto        {: variables.add(new Variables(palabra,"object")); :}
+    |   PALABRA:palabra IGUAL PALABRA          {: variables.add(new Variables(palabra,"object")); :}
+    |   PALABRA:palabra IGUAL PALABRA COMA multiple_objeto        {: variables.add(new Variables(palabra,"object")); :}
+    |   PALABRA:palabra COMA multiple_objeto                     {: variables.add(new Variables(palabra,"object")); :}
+    ;
+/*import*/
+importando::= IMPORTAR PALABRA PUNTO_COMA                  {: :}
+    |   IMPORTAR PALABRA repetir_importar PUNTO_COMA                       {:  :}
+    |   IMPORTAR PALABRA PALABRA repetir_importar PUNTO_COMA                       {:  :}
+    ;
+repetir_importar::= PUNTO PALABRA                  {: :}
+    |   PUNTO PALABRA repetir_importar                       {:  :}
+    |   PUNTO ASTERISCO                        {:  :}
+    ;   
+operaciones_aritmeticas_entero::= PARENTESIS_A DIGITOS PARENTESIS_C                  {: :}
+    |   PARENTESIS_A DIGITOS PARENTESIS_C  elegir_operacion operaciones_aritmeticas_entero                 {: :}
+    |   PARENTESIS_A DIGITOS elegir_operacion operaciones_aritmeticas_entero PARENTESIS_C                  {: :}
+    |   PARENTESIS_A DIGITOS elegir_operacion operaciones_aritmeticas_entero PARENTESIS_C elegir_operacion operaciones_aritmeticas_entero         {: :}
+    |   DIGITOS                                                                        {: :}
+    |   DIGITOS elegir_operacion operaciones_aritmeticas_entero         {: :}
+    ; 
+
+
+//decimal
+operaciones_aritmeticas_decimal::= PARENTESIS_A para_decimal PARENTESIS_C                  {: :}
+    |   PARENTESIS_A para_decimal PARENTESIS_C elegir_operacion operaciones_aritmeticas_decimal                 {: :}
+    |   PARENTESIS_A para_decimal elegir_operacion operaciones_aritmeticas_decimal PARENTESIS_C                  {: :}
+    |   PARENTESIS_A para_decimal elegir_operacion operaciones_aritmeticas_decimal PARENTESIS_C elegir_operacion operaciones_aritmeticas_decimal         {: :}
+    |   para_decimal                                                                        {: :}
+    |   para_decimal elegir_operacion operaciones_aritmeticas_decimal         {: :}
+    ;    
+elegir_operacion::= MAS                                                  {: :}
+    |   MENOS                    {: :}
+    |   ASTERISCO                    {: :}
+    |   RESTO                    {: :}
+    |   DIAGONAL                    {: :}
+    ; 
+para_decimal::= DIGITOS PUNTO DIGITOS                                                   {: :}
+    |   DIGITOS                                                                       {:  :}
+    ;  
+//CICLOS 
+creacion_ciclos::= ciclo_for                                                 {: :}
+    |   ciclo_while                                                                        {:  :}
+    |   ciclo_do_while                                                 {:  :}
+    ;  
+eleccion_simbolos_mayor_menor::= MENOR_QUE                                                 {: :}
+    |   MAYOR_QUE                                                                        {:  :}
+    |   MENOR_IGUAL                                                 {:  :}
+    |   MAYOR_IGUAL                                                 {:  :}
+    ;  
+eleccion_incremento_decremento::= INCREMENTO                                                {: :}
+    |   DECREMENTO                                                                       {:  :}
+    ;  
+ciclo_for::= FOR PARENTESIS_A ENTERO PALABRA IGUAL operaciones_aritmeticas_entero PUNTO_COMA ENTERO eleccion_simbolos_mayor_menor operaciones_aritmeticas_entero PUNTO_COMA PALABRA eleccion_incremento_decremento PARENTESIS_C LLAVE_A LLAVE_C                     {: :}
+    |   FOR PARENTESIS_A PALABRA IGUAL operaciones_aritmeticas_entero PUNTO_COMA ENTERO eleccion_simbolos_mayor_menor operaciones_aritmeticas_entero PUNTO_COMA PALABRA IGUAL PALABRA elegir_operacion operaciones_aritmeticas_entero PARENTESIS_C LLAVE_A LLAVE_C  {:  :}
+    |   FOR PARENTESIS_A ENTERO PALABRA IGUAL operaciones_aritmeticas_entero PUNTO_COMA ENTERO eleccion_simbolos_mayor_menor operaciones_aritmeticas_entero PUNTO_COMA PALABRA eleccion_incremento_decremento PARENTESIS_C LLAVE_A contenedor_internos LLAVE_C                     {: :}
+    |   FOR PARENTESIS_A PALABRA IGUAL operaciones_aritmeticas_entero PUNTO_COMA ENTERO eleccion_simbolos_mayor_menor operaciones_aritmeticas_entero PUNTO_COMA PALABRA IGUAL PALABRA elegir_operacion operaciones_aritmeticas_entero PARENTESIS_C LLAVE_A contenedor_internos LLAVE_C  {:  :}
+    
+    ;  
+ciclo_while::= WHILE PARENTESIS_A operadores_condicional PARENTESIS_C LLAVE_A LLAVE_C                     {: :}
+    |WHILE PARENTESIS_A operadores_condicional PARENTESIS_C LLAVE_A contenedor_internos LLAVE_C                     {: :}
+    ;  
+ciclo_do_while::= DO LLAVE_A LLAVE_C  WHILE PARENTESIS_A operadores_condicional PARENTESIS_C PUNTO_COMA  {: :}
+    |DO LLAVE_A contenedor_internos LLAVE_C  WHILE PARENTESIS_A operadores_condicional PARENTESIS_C PUNTO_COMA  {: :}
+    ; 
+casos_switch ::= CASE COMILLA_LETRA DOS_PUNTOS BREAK PUNTO_COMA   {: :}
+    |   CASE COMILLAS_TEXTO DOS_PUNTOS BREAK PUNTO_COMA   {: :}
+    |   CASE DIGITOS DOS_PUNTOS BREAK PUNTO_COMA   {: :}
+    |   CASE COMILLA_LETRA DOS_PUNTOS contenedor_internos BREAK PUNTO_COMA   {: :}
+    |   CASE COMILLAS_TEXTO DOS_PUNTOS contenedor_internos BREAK PUNTO_COMA   {: :}
+    |   CASE DIGITOS DOS_PUNTOS contenedor_internos BREAK PUNTO_COMA   {: :}
+    ;  
+
+condicional_switch::= SWITCH PARENTESIS_A PALABRA PARENTESIS_C LLAVE_A casos_switch DEFAULT DOS_PUNTOS BREAK PUNTO_COMA LLAVE_C   {: :}
+    |   SWITCH PARENTESIS_A PALABRA PARENTESIS_C LLAVE_A casos_switch LLAVE_C   {: :}
+    ;  
