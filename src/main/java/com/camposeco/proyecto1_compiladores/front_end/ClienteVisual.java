@@ -10,6 +10,8 @@ import static com.camposeco.proyecto1_compiladores.carga_archivo.CargarArchivo.a
 import static com.camposeco.proyecto1_compiladores.carga_archivo.CargarArchivo.archivosJavaProyecto2;
 import static com.camposeco.proyecto1_compiladores.carga_archivo.MovilizadorPath.movilizarDatosPath;
 import static com.camposeco.proyecto1_compiladores.carga_archivo.ObtenerIp.obtencionIp;
+import static com.camposeco.proyecto1_compiladores.front_end.ServidorVisual.CargaArchivo;
+import static com.camposeco.proyecto1_compiladores.front_end.ServidorVisual.datos;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.io.DataOutputStream;
@@ -168,7 +170,8 @@ public class ClienteVisual extends javax.swing.JFrame {
                 listaProyectoEnviar.close();
                 socketCliente.close();
                 proyectos.clear();
-                
+                CargaArchivo.setText("");
+                datos.setText("");
         } catch (IOException ex) {
             Logger.getLogger(ClienteVisual.class.getName()).log(Level.SEVERE, null, ex);
         }

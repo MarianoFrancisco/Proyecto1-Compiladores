@@ -72,6 +72,10 @@ public class ServidorVisual extends javax.swing.JFrame implements Runnable{
     filaA3 = new javax.swing.JLabel();
     jLabel9 = new javax.swing.JLabel();
     columnaA4 = new javax.swing.JLabel();
+    jDesktopPane1 = new javax.swing.JDesktopPane();
+    jScrollPane3 = new javax.swing.JScrollPane();
+    datos = new javax.swing.JTextArea();
+    columnaA5 = new javax.swing.JLabel();
     jMenuBar1 = new javax.swing.JMenuBar();
     jMenu1 = new javax.swing.JMenu();
     jMenu2 = new javax.swing.JMenu();
@@ -169,6 +173,40 @@ public class ServidorVisual extends javax.swing.JFrame implements Runnable{
 
     jTabbedPane1.addTab("Analizador", escritorio1);
 
+    datos.setColumns(20);
+    datos.setRows(5);
+    jScrollPane3.setViewportView(datos);
+
+    columnaA5.setFont(new java.awt.Font("Engravers MT", 0, 12)); // NOI18N
+    columnaA5.setForeground(new java.awt.Color(0, 0, 0));
+    columnaA5.setText("Datos procesados:");
+
+    jDesktopPane1.setLayer(jScrollPane3, javax.swing.JLayeredPane.DEFAULT_LAYER);
+    jDesktopPane1.setLayer(columnaA5, javax.swing.JLayeredPane.DEFAULT_LAYER);
+
+    javax.swing.GroupLayout jDesktopPane1Layout = new javax.swing.GroupLayout(jDesktopPane1);
+    jDesktopPane1.setLayout(jDesktopPane1Layout);
+    jDesktopPane1Layout.setHorizontalGroup(
+        jDesktopPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(jDesktopPane1Layout.createSequentialGroup()
+            .addGap(48, 48, 48)
+            .addGroup(jDesktopPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(columnaA5)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 527, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addContainerGap(55, Short.MAX_VALUE))
+    );
+    jDesktopPane1Layout.setVerticalGroup(
+        jDesktopPane1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        .addGroup(jDesktopPane1Layout.createSequentialGroup()
+            .addGap(63, 63, 63)
+            .addComponent(columnaA5)
+            .addGap(52, 52, 52)
+            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 428, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addContainerGap(49, Short.MAX_VALUE))
+    );
+
+    jTabbedPane1.addTab("Datos Procesados", jDesktopPane1);
+
     jMenu1.setText("File");
     jMenuBar1.add(jMenu1);
 
@@ -192,30 +230,22 @@ public class ServidorVisual extends javax.swing.JFrame implements Runnable{
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JTextArea CargaArchivo;
-    private javax.swing.JLabel columnaA;
-    private javax.swing.JLabel columnaA1;
-    private javax.swing.JLabel columnaA2;
+    public static javax.swing.JTextArea CargaArchivo;
     private javax.swing.JLabel columnaA3;
     private javax.swing.JLabel columnaA4;
+    private javax.swing.JLabel columnaA5;
+    public static javax.swing.JTextArea datos;
     private javax.swing.JDesktopPane escritorio1;
-    private javax.swing.JLabel filaA;
-    private javax.swing.JLabel filaA1;
-    private javax.swing.JLabel filaA2;
     private javax.swing.JLabel filaA3;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JLabel jLabel8;
+    private javax.swing.JDesktopPane jDesktopPane1;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
-    private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTextArea jTextArea1;
     // End of variables declaration//GEN-END:variables
@@ -223,27 +253,34 @@ public class ServidorVisual extends javax.swing.JFrame implements Runnable{
     @Override
     public void run() {
         try {
+            
             ServerSocket socketServidor = new ServerSocket(10001);
             while(true){
+                
             Socket socketCliente=socketServidor.accept();
             ObjectInputStream proyectosEntrada= new ObjectInputStream(socketCliente.getInputStream());
             //DataInputStream proyectosEntrada= new DataInputStream(socketCliente.getInputStream());
             proyectos=(ArrayList<String[]>) proyectosEntrada.readUnshared();
             listaProyecto1 = proyectos.get(0);
             listaProyecto2 = proyectos.get(1);
-                System.out.println("leemos archivo 1");
+                datos.setText(datos.getText()+"\n--------------------leemos proyecto 1");
             for (int i = 0; i < listaProyecto1.length; i++) {
             }
             for (int i = 0; i < listaProyecto1.length; i++) {
+                datos.setText(datos.getText()+"\n--------------------leemos proyecto 1: archivo: "+(i+1));
                 analisis(listaProyecto1[i]);
+                
             }
-                System.out.println("leemos archivo 2");
+                datos.setText(datos.getText()+"\n--------------------leemos archivo 2");
                 for (int i = 0; i < listaProyecto2.length; i++) {
             }
             
             for (int i = 0; i < listaProyecto2.length; i++) {
+                datos.setText(datos.getText()+"\n--------------------leemos proyecto 2: archivo: "+(i+1));
                 analisis(listaProyecto2[i]);
+                
             }
+            
             socketCliente.close();}
         } catch (IOException ex) {
             Logger.getLogger(ServidorVisual.class.getName()).log(Level.SEVERE, null, ex);
@@ -268,67 +305,67 @@ public class ServidorVisual extends javax.swing.JFrame implements Runnable{
             sintactico.parse();
             if (sintactico.getClases().size()>0) {
                 for (int i = 0; i < sintactico.getClases().size(); i++) {
-                    System.out.println("*Vemos clases*");
-                    System.out.println(sintactico.getClases().get(i).getNombreClase());
+                    datos.setText(datos.getText()+"\n*Vemos clases*");
+                    datos.setText(datos.getText()+"\n"+sintactico.getClases().get(i).getNombreClase());
                     if (sintactico.getClases().get(i).getNombreMetodosClases().size()>0) {
-                        System.out.println("*Vemos metodos*");
+                        datos.setText(datos.getText()+"\n"+"*Vemos metodos*");
                         for (int j = 0; j < sintactico.getClases().get(i).getNombreMetodosClases().size(); j++) {
                             if (sintactico.getClases().get(i).getNombreMetodosClases().get(j).getListaParametros().size()>0) {
-                                System.out.println("*Vemos parametros*");
+                                datos.setText(datos.getText()+"\n"+"*Vemos parametros*");
                                 for (int k = 0; k < sintactico.getClases().get(i).getNombreMetodosClases().get(j).getListaParametros().size(); k++) {
-                                    System.out.println(sintactico.getClases().get(i).getNombreMetodosClases().get(j).getListaParametros().get(k).getNombreParametro());
-                                    System.out.println(sintactico.getClases().get(i).getNombreMetodosClases().get(j).getListaParametros().get(k).getTipoParametro());
+                                    datos.setText(datos.getText()+"\n"+sintactico.getClases().get(i).getNombreMetodosClases().get(j).getListaParametros().get(k).getNombreParametro());
+                                    datos.setText(datos.getText()+"\n"+sintactico.getClases().get(i).getNombreMetodosClases().get(j).getListaParametros().get(k).getTipoParametro());
                                 }
                             }else{
-                                System.out.println("no tiene parametros de metodo");
+                                datos.setText(datos.getText()+"\n"+"no tiene parametros de metodo");
                             }
-                            System.out.println(sintactico.getClases().get(i).getNombreMetodosClases().get(j).getNombreMetodo());
-                            System.out.println(sintactico.getClases().get(i).getNombreMetodosClases().get(j).getTipoMetodo());
+                            datos.setText(datos.getText()+"\n"+sintactico.getClases().get(i).getNombreMetodosClases().get(j).getNombreMetodo());
+                            datos.setText(datos.getText()+"\n"+sintactico.getClases().get(i).getNombreMetodosClases().get(j).getTipoMetodo());
                             if (sintactico.getClases().get(i).getNombreMetodosClases().get(j).getVariablesMetodos().size()>0) {
-                                System.out.println("*Vemos variables metodos*");
+                                datos.setText(datos.getText()+"\n"+"*Vemos variables metodos*");
                                 for (int k = 0; k < sintactico.getClases().get(i).getNombreMetodosClases().get(j).getVariablesMetodos().size(); k++) {
-                                    System.out.println(sintactico.getClases().get(i).getNombreMetodosClases().get(j).getVariablesMetodos().get(k).getIdentificador());
-                                    System.out.println(sintactico.getClases().get(i).getNombreMetodosClases().get(j).getVariablesMetodos().get(k).getTipoVariable());
+                                    datos.setText(datos.getText()+"\n"+sintactico.getClases().get(i).getNombreMetodosClases().get(j).getVariablesMetodos().get(k).getIdentificador());
+                                    datos.setText(datos.getText()+"\n"+sintactico.getClases().get(i).getNombreMetodosClases().get(j).getVariablesMetodos().get(k).getTipoVariable());
                                 }
                             }else{
-                                System.out.println("no tiene variables de metodo");
+                                datos.setText(datos.getText()+"\n"+"no tiene variables de metodo");
                             }
                         }
                     }else{
-                        System.out.println("No se encontraron metodos en la clase");
+                        datos.setText(datos.getText()+"\n"+"No se encontraron metodos en la clase");
                     }
                     if (sintactico.getClases().get(i).getVariablesClases().size()>0) {
-                        System.out.println("*Vemos variables clases*");
+                        datos.setText(datos.getText()+"\n"+"*Vemos variables clases*");
                        for (int j = 0; j < sintactico.getClases().get(i).getVariablesClases().size(); j++) {
-                            System.out.println(sintactico.getClases().get(i).getVariablesClases().get(j).getIdentificador());
-                            System.out.println(sintactico.getClases().get(i).getVariablesClases().get(j).getTipoVariable());
+                            datos.setText(datos.getText()+"\n"+sintactico.getClases().get(i).getVariablesClases().get(j).getIdentificador());
+                            datos.setText(datos.getText()+"\n"+sintactico.getClases().get(i).getVariablesClases().get(j).getTipoVariable());
                         }
                     }else{
-                        System.out.println("No se encontraron variables de clase");
+                        datos.setText(datos.getText()+"\n"+"No se encontraron variables de clase");
                     }
-                    System.out.println("-----------Comentarios");
+                    datos.setText(datos.getText()+"\n"+"-----------Comentarios");
                     if (lexico.getComentarios().size()>0) {
                         for (int j = 0; j < lexico.getComentarios().size(); j++) {
-                            System.out.println(lexico.getComentarios().get(j));
+                            datos.setText(datos.getText()+"\n"+lexico.getComentarios().get(j));
                         }
                     }
-                    if (sintactico.getErrorSintactico().size()>0) {
-                        for (int j = 0; j < sintactico.getErrorSintactico().size(); j++) {
-                            CargaArchivo.setText(CargaArchivo.getText()+sintactico.getErrorSintactico().get(i));
-                        }
-                        
-                    }
-                    if (lexico.getErrorLexico().size()>0) {
-                        for (int j = 0; j < sintactico.getErrorSintactico().size(); j++) {
-                            CargaArchivo.setText(CargaArchivo.getText()+lexico.getErrorLexico().get(j));
-                        }
-                    }
+                    
+                    
                 }
                 
             }else{
-                System.out.println("Clase no encontrada en este archivo");
+                datos.setText(datos.getText()+"\n"+"Clase no encontrada en este archivo");
             }
-            
+            if (sintactico.getErrorSintactico().size()>0) {
+                        for (int j = 0; j < sintactico.getErrorSintactico().size(); j++) {
+                            CargaArchivo.setText(CargaArchivo.getText()+"\n"+sintactico.getErrorSintactico().get(j));
+                        }
+                    }
+                    if (lexico.getErrorLexico().size()>0) {
+                        for (int j = 0; j < lexico.getErrorLexico().size(); j++) {
+                            CargaArchivo.setText(CargaArchivo.getText()+"\n"+lexico.getErrorLexico().get(j));
+                        }
+                }
             /*System.out.println(sintactico.getMetodos().get(0).getNombreMetodo());
             System.out.println(sintactico.getMetodos().get(0).getTipoMetodo());
             System.out.println(sintactico.getMetodos().get(0).getListaParametros().get(0).getNombreParametro());

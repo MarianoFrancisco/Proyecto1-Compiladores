@@ -111,6 +111,16 @@ COMILLAS_TEXTO= ((\")({COMBINACION})+(\"))
     public ArrayList<String> getErrorLexico(){
         return errorLexico;
     }
+    String temporal="";
+    void reiniciarTemp(){
+        temporal="";
+    }
+    void actualizarTemp(String dato){
+        temporal=temporal+dato;
+    }
+    String getTemporal(){
+        return temporal;
+    }
     private ArrayList<String> comentarios=new ArrayList<>();
     public ArrayList<String> getComentarios(){
         return comentarios;
@@ -200,16 +210,16 @@ COMILLAS_TEXTO= ((\")({COMBINACION})+(\"))
 
 /*Comentarios*/
 
-<YYINITIAL> {COMENTARIO_LINEA}        { yybegin(LINE_COMENTARIO); System.out.println("comentario linea");
+<YYINITIAL> {COMENTARIO_LINEA}        { yybegin(LINE_COMENTARIO); System.out.println("comentario linea");reiniciarTemp();
                                    }
-<LINE_COMENTARIO>   [^\n\r]             {comentarios.add(yytext());}
-<LINE_COMENTARIO> [\n\r]             {
+<LINE_COMENTARIO>   [^\n\r]             {actualizarTemp(yytext());}
+<LINE_COMENTARIO> [\n\r]             {comentarios.add(getTemporal());
                                         yybegin(YYINITIAL);
                                 }
-<YYINITIAL> {COMENTARIO_MULTILINEA}        { yybegin(MULTI_COMENTARIO); System.out.println("comentario MULTI");
+<YYINITIAL> {COMENTARIO_MULTILINEA}        { yybegin(MULTI_COMENTARIO); System.out.println("comentario MULTI");reiniciarTemp();
                                    }
-<MULTI_COMENTARIO>[^*/]             {comentarios.add(yytext());}
-<MULTI_COMENTARIO> "*/"             {
+<MULTI_COMENTARIO>[^*/]             {actualizarTemp(yytext());}
+<MULTI_COMENTARIO> "*/"             {comentarios.add(getTemporal());
                                     yybegin(YYINITIAL);
                                 }
 
@@ -224,4 +234,4 @@ COMILLAS_TEXTO= ((\")({COMBINACION})+(\"))
 //
 
 //cualquier otra cosa
-[^]                 {errorLexico.add(yytext()+" linea "+(yyline+1)+" columna "+(yycolumn+1)+"lexico"+"Simbolo no existe en el lenguaje");}
+[^]                 {errorLexico.add("Error producido por: "+yytext()+" en la linea "+(yyline+1)+", columna "+(yycolumn+1)+"encontrado en el lexico ya que el simbolo no existe en el lenguaje");}

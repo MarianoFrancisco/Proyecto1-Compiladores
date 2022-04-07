@@ -1221,7 +1221,7 @@ public class SintacticoParserJava extends java_cup.runtime.lr_parser {
     }
 
     public void syntax_error(Symbol cur_token) {
-        errorSintactico.add(" fila "+String.valueOf(cur_token.left)+" columna "+String.valueOf(cur_token.right)+"Sintactico"+"Se esperaba una clase bien hecha de java'");
+        errorSintactico.add("Error en: fila, "+String.valueOf(cur_token.left)+" columna, "+String.valueOf(cur_token.right)+" dato en el Sintactico ya que se esperaba una clase bien hecha de java");
 
     }
 
